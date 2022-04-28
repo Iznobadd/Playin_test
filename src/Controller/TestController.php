@@ -6,6 +6,7 @@ use App\Entity\Order;
 use App\Repository\DepositEntryRepository;
 use App\Repository\OrderEntryRepository;
 use App\Repository\OrderRepository;
+use App\Repository\StockEntryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class TestController extends AbstractController
 {
     #[Route('/test', name: 'app_test')]
-    public function index(OrderRepository $orderRepo, OrderEntryRepository $orderEntryRepo, DepositEntryRepository $depositEntryRepo, EntityManagerInterface $em): Response
+    public function index(OrderRepository $orderRepo, OrderEntryRepository $orderEntryRepo, DepositEntryRepository $depositEntryRepo, StockEntryRepository $stockEntryRepo, EntityManagerInterface $em): Response
     {
 
         $test = $orderRepo->findBy(['id' => 1]);
@@ -29,6 +30,7 @@ class TestController extends AbstractController
             // RECUPERER LA QUANTITÉ RESTANTE DU PRODUIT EN QUESTION
             $quantity = $orderEntry[0]->getQuantity();
             $depositEntry = $depositEntryRepo->findBy(['product' => $product_id]);
+            $stockEntry = $stockEntryRepo->findBy(['product' => $product_id]);
 
             $depositEmpty = true;
 
@@ -64,7 +66,17 @@ class TestController extends AbstractController
 
             else
             {
-                dd('test');
+                for($i = 0; $i < Count($stockEntry); $i++)
+                {
+                    dump($i);
+                    if($stockEntry[$i]->getQuantity() >=$quantity)
+                    {
+                        $stockEntry[$i]->setSoldQuantity($stockEntry[$i]->getSoldQuantity() + $quantity);
+                        $stockEntry[$i]->setQuantity($stockEntry[$i]->getQuantity() - $quantity);
+                        $em->flush();
+                        break;
+                    }
+                }
             }
 
 
